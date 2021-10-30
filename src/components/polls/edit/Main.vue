@@ -2,8 +2,6 @@
 import { reactive, ref } from 'vue';
 import Row from '../../Row.vue';
 import Block from '../../Block.vue';
-import Slider from '../../Slider.vue';
-import InfoBox from '../../InfoBox.vue';
 
 const poll = reactive({
   id:                             0,
@@ -25,6 +23,55 @@ function addDefaultOptions() {
   poll.options.push(reactive({"positive": false, "value": "No"}));
 }
 
+class PollHelper {
+  static validate(poll) {
+    let errors = [];
+    if (poll.question === '') {
+      errors.push("Question can't be empty.");
+    }
+    if (poll.channel_id === '' || poll.channel_id === null) {
+      errors.push("Channel can't be empty.")
+    }
+    return errors;
+  }
+
+  static sanitize(poll) {
+    let newPoll = JSON.parse(JSON.stringify(poll));
+
+    if (newPoll.channel_id === '') {
+      newPoll.channel_id = null;
+    }
+    if (newPoll.result_channel_id === '') {
+      newPoll.result_channel_id = newPoll.channel_id;
+    }
+    if (newPoll.role_id_needed === '') {
+      newPoll.role_id_needed = null;
+    }
+
+    return newPoll;
+  }
+}
+
+function save() {
+  console.log(PollHelper.sanitize(poll));
+  let errors = PollHelper.validate(poll);
+  if (errors.length > 0) {
+    console.log(errors);
+  } else {
+    fetch('http://127.0.0.1:8080/api/polls/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(PollHelper.sanitize(poll))
+    }).then((temperature) => {
+      console.log('GOOD', temperature);
+    }).catch((reason) => {
+      console.log('BAD', reason);
+    });
+  }
+}
+
 addDefaultOptions();
 
 function getAvailableChannels() {
@@ -44,12 +91,6 @@ function lockButton() {
   if (!poll.custom) {
     poll.options = ref([]);
     addDefaultOptions();
-  }
-}
-
-class Translator {
-  translate(key) {
-    return key;
   }
 }
 
@@ -145,8 +186,12 @@ let availableRoles    = getAvailableRoles();
         </option>
       </select>
     </Row>
+    <button class="btn btn-success" @click="save();">
+      Save
+    </button>
   </Block>
 </template>
+
 <style lang="scss">
   @import "./../../../scss/slider.scss";
 </style>
