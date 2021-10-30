@@ -1,5 +1,4 @@
 <script setup>
-import InfoBox from './InfoBox.vue';
 defineProps({
   label: String,
   explanation: String,

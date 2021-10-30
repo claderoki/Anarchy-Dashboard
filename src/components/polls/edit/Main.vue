@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue';
 import Row from '../../Row.vue';
 import Block from '../../Block.vue';
+import BlockFooter from '../../BlockFooter.vue';
 
 const poll = reactive({
   id:                             0,
@@ -148,6 +149,11 @@ let availableRoles    = getAvailableRoles();
         </option>
       </select>
     </Row>
+  <BlockFooter>
+    <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="save();">
+      Save
+    </button>
+  </BlockFooter>
   </Block>
   <Block title="Additional settings" subtitle="Extra settings to help personalize your poll.">
     <Row label="Pin?">
@@ -186,9 +192,11 @@ let availableRoles    = getAvailableRoles();
         </option>
       </select>
     </Row>
-    <button class="btn btn-success" @click="save();">
+  <BlockFooter>
+    <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="save();">
       Save
     </button>
+  </BlockFooter>
   </Block>
 </template>
 
