@@ -1,6 +1,6 @@
 import { createWebHistory, createRouter } from "vue-router";
 
-import Polls from './components/Polls.vue';
+import Polls from './components/polls/edit/Main.vue';
 import Home from './components/Home.vue'
 
 export const router = createRouter({
