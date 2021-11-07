@@ -8,13 +8,11 @@ function open_url() {
     }).then((response) => {
       response.text().then((url) => {
         cached_url = url;
-        window.open(cached_url);
-        console.log(cached_url);
+        window.open(cached_url, '_self');
       });
     });
   } else {
-    window.open(cached_url);
-    console.log(cached_url);
+    window.open(cached_url, '_self');
   }
 }
 
