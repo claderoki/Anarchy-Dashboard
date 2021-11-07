@@ -149,11 +149,11 @@ let availableRoles    = getAvailableRoles();
         </option>
       </select>
     </Row>
-  <BlockFooter>
-    <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="save();">
-      Save
-    </button>
-  </BlockFooter>
+    <BlockFooter>
+      <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="save();">
+        Save
+      </button>
+    </BlockFooter>
   </Block>
   <Block title="Additional settings" subtitle="Extra settings to help personalize your poll.">
     <Row label="Pin?">
@@ -192,11 +192,11 @@ let availableRoles    = getAvailableRoles();
         </option>
       </select>
     </Row>
-  <BlockFooter>
-    <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="save();">
-      Save
-    </button>
-  </BlockFooter>
+    <BlockFooter>
+      <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="save();">
+        Save
+      </button>
+    </BlockFooter>
   </Block>
 </template>
 
