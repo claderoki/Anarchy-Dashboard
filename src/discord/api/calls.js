@@ -1,5 +1,6 @@
+import { AbstractCall } from '/@/helpers/base_api';
 
-class DiscordCall {
+class DiscordCall extends AbstractCall {
     getAccessToken() {
         // let expires_at = localStorage.getItem('expires_at');
         // let refresh_token = localStorage.getItem('refresh_token');
@@ -9,33 +10,25 @@ class DiscordCall {
         return access_token;
     }
 
-    getMethod() {
-        return 'GET';
+    getBaseUri() {
+        return 'https://discord.com/api';
     }
 
-    parseResponse(json) {
-        return json;
-    }
-
-    call(onSuccess, onError) {
-        let uri = 'https://discord.com/api' + this.getEndpoint();
-
+    getHeaders() {
         let headers = new Headers();
         headers.append('Authorization', 'Bearer ' + this.getAccessToken());
-
-        fetch(uri, {
-            method: this.getMethod(),
-            headers: headers
-        }).then((response) => {
-            response.json().then((json) => {
-                onSuccess(this.parseResponse(json));
-            });
-        });
+        return headers;
     }
 }
 
 export class GetMe extends DiscordCall {
     getEndpoint() {
         return "/users/@me";
+    }
+}
+
+export class GetGuilds extends DiscordCall {
+    getEndpoint() {
+        return "/users/@me/guilds";
     }
 }

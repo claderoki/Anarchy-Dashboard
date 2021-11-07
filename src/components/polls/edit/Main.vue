@@ -1,8 +1,10 @@
 <script setup>
 import { reactive, ref } from 'vue';
-import Row from '../../Row.vue';
-import Block from '../../Block.vue';
-import BlockFooter from '../../BlockFooter.vue';
+import Row from '/@/components/Row.vue';
+import Block from '/@/components/Block.vue';
+import BlockFooter from '/@/components/BlockFooter.vue';
+import { GetGuilds } from '/@/discord/api/calls';
+import { SavePoll } from '/@/api/calls';
 
 const poll = reactive({
   id:                             0,
@@ -54,39 +56,42 @@ class PollHelper {
 }
 
 function save() {
-  console.log(PollHelper.sanitize(poll));
   let errors = PollHelper.validate(poll);
   if (errors.length > 0) {
     console.log(errors);
   } else {
-    fetch('http://127.0.0.1:8080/api/polls/save', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(PollHelper.sanitize(poll))
-    }).then((temperature) => {
-      console.log('GOOD', temperature);
-    }).catch((reason) => {
-      console.log('BAD', reason);
+    new SavePoll(PollHelper.sanitize(poll)).call((response) => {
+      console.log('GOOD', response);
+    }, (error) => {
+      console.log('BAD', error);
     });
   }
 }
 
 addDefaultOptions();
 
-function getAvailableChannels() {
-  return [
-    {"id": 1, "name": "general"},
-    {"id": 2, "name": "bot-spam"},
-  ]
-}
-function getAvailableRoles() {
-  return [
-    {"id": 1, "name": "5k+"},
-    {"id": 2, "name": "Earthling"},
-  ]
-}
+let availableChannels = ref([]);
+let availableRoles    = ref([]);
+
+new GetGuilds().call((response) => {
+  console.log('Guilds', response);
+})
+
+
+// function getAvailableChannels() {
+//   return [
+//     {"id": 1, "name": "general"},
+//     {"id": 2, "name": "bot-spam"},
+//   ]
+// }
+
+// function getAvailableRoles() {
+//   return [
+//     {"id": 1, "name": "5k+"},
+//     {"id": 2, "name": "Earthling"},
+//   ]
+// }
+
 function lockButton() {
   poll.custom = !poll.custom;
   if (!poll.custom) {
@@ -94,9 +99,6 @@ function lockButton() {
     addDefaultOptions();
   }
 }
-
-let availableChannels = getAvailableChannels();
-let availableRoles    = getAvailableRoles();
 
 </script>
 
@@ -201,5 +203,5 @@ let availableRoles    = getAvailableRoles();
 </template>
 
 <style lang="scss">
-  @import "./../../../scss/slider.scss";
+  @import "/@/scss/slider.scss";
 </style>

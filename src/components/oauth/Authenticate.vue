@@ -1,12 +1,13 @@
 <script setup>
 import { reactive } from '@vue/reactivity';
+import {Authenticate} from '/@/api/calls';
 
 function store_oauth(oauth_data) {
     let currentDate = new Date();
     currentDate.setSeconds(currentDate.getSeconds() + oauth_data.expires_in)
     localStorage.setItem('access_token', oauth_data.access_token);
     localStorage.setItem('refresh_token', oauth_data.refresh_token);
-    localStorage.setItem('expires_at', currentDate.toISOString()); // parse to datetime
+    localStorage.setItem('expires_at', currentDate.toISOString());
 }
 
 let error = reactive({
@@ -18,20 +19,12 @@ let uri = window.location.search.substring(1);
 let params = new URLSearchParams(uri);
 let code = params.get('code');
 if (code !== null) {
-    fetch('http://127.0.0.1:8080/api/oauth/authenticate/' + code, {
-        method: 'GET',
-    }).then((response) => {
-        response.json().then((json) => {
-            if (response.ok) {
-                store_oauth(json);
-                window.open('/authenticated', '_self');
-            } else {
-                error.message = json.error;
-                error.description = json.error_description;
-            }
-        });
-    }).catch((reason) => {
-        error.message = reason;
+    new Authenticate(code).call((json) => {
+        store_oauth(json);
+        window.open('/authenticated', '_self');
+    }, (error) => {
+        error.message = error.message;
+        error.description = error.description;
     });
 }
 

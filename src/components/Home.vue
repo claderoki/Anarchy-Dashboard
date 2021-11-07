@@ -1,15 +1,12 @@
 <script setup>
+import { GetOauthUrl } from '/@/api/calls';
 
 let cached_url = null;
 function open_url() {
   if (cached_url === null) {
-    fetch('http://127.0.0.1:8080/api/oauth/url', {
-      method: 'GET',
-    }).then((response) => {
-      response.text().then((url) => {
-        cached_url = url;
-        window.open(cached_url, '_self');
-      });
+    new GetOauthUrl().call((url) => {
+      cached_url = url;
+      window.open(cached_url, '_self');
     });
   } else {
     window.open(cached_url, '_self');

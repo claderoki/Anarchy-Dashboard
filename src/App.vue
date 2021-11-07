@@ -1,5 +1,5 @@
 <script setup>
-import TopBar from './components/TopBar.vue'
+import TopBar from '/@/components/TopBar.vue'
 </script>
 
 <template>
@@ -7,7 +7,7 @@ import TopBar from './components/TopBar.vue'
 </template>
 
 <style lang="scss">
-@import "./scss/gruvbox_colors.scss";
+@import "/@/scss/gruvbox_colors.scss";
 #app {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

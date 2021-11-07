@@ -1,5 +1,5 @@
 <script setup>
-import { GetMe } from '../../discord/api/calls';
+import { GetMe } from '/@/discord/api/calls';
 import { reactive } from '@vue/reactivity';
 
 let me = reactive({

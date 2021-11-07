@@ -14,5 +14,5 @@ defineProps({
 </template>
 
 <style lang="scss">
-  @import "./../scss/slider.scss";
+  @import "/@/scss/slider.scss";
 </style>
