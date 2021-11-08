@@ -2,25 +2,33 @@
 
 import { ref, reactive } from 'vue';
 import { GetMutualGuilds } from '/@/api/calls';
+import { SelectedGuildCache } from '/@/helpers/cache';
 
 let mutualGuildsCalled = false;
 let mutualGuilds = reactive([]);
 
 let data = reactive({
-  selectedGuild: localStorage.getItem('selected_guild')
+  selectedGuild: SelectedGuildCache.get()
 });
 
 if (!mutualGuildsCalled) {
   new GetMutualGuilds().call((response) => {
+    let containsSelected = false;
     for (let guild of response) {
       mutualGuilds.push(guild);
+      if (guild.id === SelectedGuildCache.get()) {
+        containsSelected = true;
+      }
+    }
+    if (!containsSelected) {
+      SelectedGuildCache.remove();
     }
     mutualGuildsCalled = true;
   });
 }
 
 function onGuildSelect() {
-  localStorage.setItem('selected_guild', data.selectedGuild);
+  SelectedGuildCache.set(data.selectedGuild);
 }
 
 if (data.selectedGuild === null) {
@@ -38,7 +46,7 @@ if (data.selectedGuild === null) {
     <div class="collapse navbar-collapse" id="anarchy-topbar-links">
       <div class="navbar-nav">
         <router-link class="nav-item nav-link" to="/home">Home</router-link>
-        <router-link class="nav-item nav-link" to="/polls">Polls</router-link>
+        <router-link v-if="SelectedGuildCache.get() !== null" class="nav-item nav-link" to="/polls">Polls</router-link>
       </div>
     </div>
     <div>

@@ -8,6 +8,17 @@ class AnarchyCall extends AbstractCall {
     getHeaders() {
         return new Headers();
     }
+
+    getAccessToken() {
+        let access_token = localStorage.getItem('access_token');
+        return access_token;
+    }
+
+    getHeaders() {
+        let headers = new Headers();
+        headers.append('Authorization', 'Bearer ' + this.getAccessToken());
+        return headers;
+    }
 }
 
 export class SavePoll extends AnarchyCall {
@@ -60,16 +71,16 @@ export class GetMutualGuilds extends AnarchyCall {
     getEndpoint() {
         return '/discord/get_mutual_guilds';
     }
+}
 
-    getAccessToken() {
-        let access_token = localStorage.getItem('access_token');
-        return access_token;
+export class GetPollChannels extends AnarchyCall {
+    constructor(guild_id) {
+        super();
+        this.guild_id = guild_id;
     }
 
-    getHeaders() {
-        let headers = new Headers();
-        headers.append('Authorization', 'Bearer ' + this.getAccessToken());
-        return headers;
+    getEndpoint() {
+        return '/polls/' +this.guild_id + '/allowed_channels';
     }
 
 }

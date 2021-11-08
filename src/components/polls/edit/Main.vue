@@ -4,7 +4,8 @@ import Row from '/@/components/Row.vue';
 import Block from '/@/components/Block.vue';
 import BlockFooter from '/@/components/BlockFooter.vue';
 import { GetGuilds } from '/@/discord/api/calls';
-import { SavePoll, GetMutualGuilds } from '/@/api/calls';
+import { SavePoll, GetMutualGuilds, GetPollChannels } from '/@/api/calls';
+import { SelectedGuildCache } from '/@/helpers/cache';
 
 const poll = reactive({
   id:                             0,
@@ -70,27 +71,17 @@ function save() {
 
 addDefaultOptions();
 
-let availableChannels = ref([]);
-let availableRoles    = ref([]);
+let availableChannels = reactive([]);
+let availableRoles    = reactive([]);
 
-// new GetGuilds().call((response) => {
-//   console.log('Guilds', response);
-// })
-
-
-// function getAvailableChannels() {
-//   return [
-//     {"id": 1, "name": "general"},
-//     {"id": 2, "name": "bot-spam"},
-//   ]
-// }
-
-// function getAvailableRoles() {
-//   return [
-//     {"id": 1, "name": "5k+"},
-//     {"id": 2, "name": "Earthling"},
-//   ]
-// }
+let pollChannelsCalled = false;
+if (!pollChannelsCalled) {
+  new GetPollChannels(SelectedGuildCache.get()).call((response) => {
+    for (let channel of response) {
+      availableChannels.push(channel);
+    }
+  })
+}
 
 function lockButton() {
   poll.custom = !poll.custom;
@@ -103,9 +94,6 @@ function lockButton() {
 </script>
 
 <template>
-  <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="get_guilds_test();">
-    Test
-  </button>
   <Block title="Basic settings" subtitle="Basic poll settings">
     <Row label="Question">
       <input id="anarchy-form" type="text" v-model="poll.question" class="form-control" placeholder="Enter question..." required/>
