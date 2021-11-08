@@ -30,9 +30,11 @@ export class AbstractCall {
             body: this.getBody(),
         }).then((response) => {
             if (!response.ok) {
-                response.text().then((text) => {
-                    onError(this.parseError(text));
-                });
+                if (onError) {
+                    response.text().then((text) => {
+                        onError(this.parseError(text));
+                    });
+                }
             } else {
                 switch (this.getResponseType()) {
                     case 'JSON':

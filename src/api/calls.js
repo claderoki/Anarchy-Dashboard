@@ -55,3 +55,21 @@ export class GetOauthUrl extends AnarchyCall {
         return 'TEXT';
     }
 }
+
+export class GetMutualGuilds extends AnarchyCall {
+    getEndpoint() {
+        return '/discord/get_mutual_guilds';
+    }
+
+    getAccessToken() {
+        let access_token = localStorage.getItem('access_token');
+        return access_token;
+    }
+
+    getHeaders() {
+        let headers = new Headers();
+        headers.append('Authorization', 'Bearer ' + this.getAccessToken());
+        return headers;
+    }
+
+}
