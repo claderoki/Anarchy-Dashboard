@@ -9,8 +9,7 @@ export const router = createRouter({
     history: createWebHistory(),
     routes: [
         {
-            // path: '/:guild_id/polls',
-            path: '/polls',
+            path: '/poll/create',
             component: Polls
         },
         {

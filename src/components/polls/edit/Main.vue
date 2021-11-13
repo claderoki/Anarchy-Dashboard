@@ -61,9 +61,9 @@ function save() {
   if (errors.length > 0) {
     console.log(errors);
   } else {
-    new SavePoll(PollHelper.sanitize(poll)).call((response) => {
+    new SavePoll(PollHelper.sanitize(poll)).call().then((response) => {
       console.log('GOOD', response);
-    }, (error) => {
+    }).catch((error) => {
       console.log('BAD', error);
     });
   }
@@ -76,7 +76,7 @@ let availableRoles    = reactive([]);
 
 let pollChannelsCalled = false;
 if (!pollChannelsCalled) {
-  new GetPollChannels(SelectedGuildCache.get()).call((response) => {
+  new GetPollChannels(SelectedGuildCache.get()).call().then((response) => {
     for (let channel of response) {
       availableChannels.push(channel);
     }

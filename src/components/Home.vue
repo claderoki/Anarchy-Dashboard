@@ -4,7 +4,7 @@ import { GetOauthUrl } from '/@/api/calls';
 let cached_url = null;
 function open_url() {
   if (cached_url === null) {
-    new GetOauthUrl().call((url) => {
+    new GetOauthUrl().call().then((url) => {
       cached_url = url;
       window.open(cached_url, '_self');
     });

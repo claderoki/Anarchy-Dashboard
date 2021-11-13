@@ -21,34 +21,36 @@ export class AbstractCall {
         return 'JSON';
     }
 
-    call(onSuccess, onError) {
+    call() {
         let uri = this.getBaseUri() + this.getEndpoint();
+        let self = this;
 
-        fetch(uri, {
-            method: this.getMethod(),
-            headers: this.getHeaders(),
-            body: this.getBody(),
-        }).then((response) => {
-            if (!response.ok) {
-                if (onError) {
+        return new Promise(function(resolve, reject) {
+            fetch(uri, {
+                method: self.getMethod(),
+                headers: self.getHeaders(),
+                body: self.getBody(),
+            }).then((response) => {
+                if (!response.ok) {
                     response.text().then((text) => {
-                        onError(this.parseError(text));
+                        reject(self.parseError(text));
                     });
+                } else {
+                    switch (self.getResponseType()) {
+                        case 'JSON':
+                            response.json().then((json) => {
+                                resolve(self.parseResponse(json));
+                            });
+                            break;
+                        default:
+                            response.text().then((text) => {
+                                resolve(self.parseResponse(text));
+                            });
+                            break;
+                    }
                 }
-            } else {
-                switch (this.getResponseType()) {
-                    case 'JSON':
-                        response.json().then((json) => {
-                            onSuccess(this.parseResponse(json));
-                        });
-                        break;
-                    default:
-                        response.text().then((text) => {
-                            onSuccess(this.parseResponse(text));
-                        });
-                        break;
-                }
-            }
-        });
+            });
+          });
     }
+
 }

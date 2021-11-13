@@ -9,7 +9,7 @@ let me = reactive({
     avatar: null,
 });
 
-new GetMe().call((response) => {
+new GetMe().call().then((response) => {
     me.id            = response.id;
     me.username      = response.username;
     me.discriminator = response.discriminator;

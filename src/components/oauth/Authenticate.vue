@@ -19,10 +19,10 @@ let uri = window.location.search.substring(1);
 let params = new URLSearchParams(uri);
 let code = params.get('code');
 if (code !== null) {
-    new Authenticate(code).call((json) => {
+    new Authenticate(code).call().then((json) => {
         store_oauth(json);
         window.open('/authenticated', '_self');
-    }, (error) => {
+    }).catch((error) => {
         error.message = error.message;
         error.description = error.description;
     });
