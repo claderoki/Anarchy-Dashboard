@@ -84,3 +84,42 @@ export class GetPollChannels extends AnarchyCall {
     }
 
 }
+
+export class GetPollAvailableChanges extends AnarchyCall {
+    getEndpoint() {
+        return '/polls/get_available_changes';
+    }
+}
+
+export class GetAllTextChannels extends AnarchyCall {
+    constructor(guild_id) {
+        super();
+        this.guild_id = guild_id;
+    }
+
+    getEndpoint() {
+        return '/discord/'+this.guild_id+'/get_all_text_channels';
+    }
+}
+
+export class GetAllRoles extends AnarchyCall {
+    constructor(guild_id) {
+        super();
+        this.guild_id = guild_id;
+    }
+
+    getEndpoint() {
+        return '/discord/'+this.guild_id+'/get_all_roles';
+    }
+}
+
+export class GetAllMembers extends AnarchyCall {
+    constructor(guild_id) {
+        super();
+        this.guild_id = guild_id;
+    }
+
+    getEndpoint() {
+        return '/discord/'+this.guild_id+'/get_all_members';
+    }
+}

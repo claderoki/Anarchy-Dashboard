@@ -4,7 +4,7 @@ import Row from '/@/components/Row.vue';
 import Block from '/@/components/Block.vue';
 import BlockFooter from '/@/components/BlockFooter.vue';
 import { GetGuilds } from '/@/discord/api/calls';
-import { SavePoll, GetMutualGuilds, GetPollChannels } from '/@/api/calls';
+import { SavePoll, GetMutualGuilds, GetAllRoles, GetAllMembers, GetAllTextChannels, GetPollChannels, GetPollAvailableChanges } from '/@/api/calls';
 import { SelectedGuildCache } from '/@/helpers/cache';
 
 const poll = reactive({
@@ -15,16 +15,24 @@ const poll = reactive({
   pin:                            false,
   mention_role:                   false,
   delete_after_results:           false,
-  custom:                         false,
+  custom:                         true,
   role_id_needed:                 '',
   vote_percentage_needed_to_pass: 50,
   max_votes_per_user:             1,
   options:                        ref([])
 });
 
+function getEmptyChange() {
+  return {
+      identifier: '',
+      key: '',
+      value: '',
+    };
+}
+
 function addDefaultOptions() {
-  poll.options.push(reactive({"positive": true, "value": "Yes"}));
-  poll.options.push(reactive({"positive": false, "value": "No"}));
+  poll.options.push(reactive({"positive": true, "value": "Yes", "changes": ref([getEmptyChange()])}));
+  poll.options.push(reactive({"positive": false, "value": "No", "changes": ref([getEmptyChange()])}));
 }
 
 class PollHelper {
@@ -70,16 +78,18 @@ function save() {
 }
 
 addDefaultOptions();
+let selectedGuild = SelectedGuildCache.get();
 
 let availableChannels = reactive([]);
 let availableRoles    = reactive([]);
 
 let pollChannelsCalled = false;
 if (!pollChannelsCalled) {
-  new GetPollChannels(SelectedGuildCache.get()).call().then((response) => {
+  new GetPollChannels(selectedGuild).call().then((response) => {
     for (let channel of response) {
       availableChannels.push(channel);
     }
+    pollChannelsCalled = true;
   })
 }
 
@@ -90,6 +100,49 @@ function lockButton() {
     addDefaultOptions();
   }
 }
+
+let availableChangesMapping = {};
+let availableChanges       = reactive([]);
+let availableChangesCalled = false;
+if (!availableChangesCalled) {
+  new GetPollAvailableChanges().call().then((response) => {
+    for (let change of response) {
+      availableChanges.push(change);
+      availableChangesMapping[change.identifier.value] = change;
+    }
+  })
+}
+
+let allTextChannels       = reactive([]);
+let allTextChannelsCalled = false;
+if (!allTextChannelsCalled) {
+  new GetAllTextChannels(selectedGuild).call().then((response) => {
+    for (let channel of response) {
+      allTextChannels.push(channel);
+    }
+  })
+}
+
+let allRoles       = reactive([]);
+let allRolesCalled = false;
+if (!allRolesCalled) {
+  new GetAllRoles(selectedGuild).call().then((response) => {
+    for (let role of response) {
+      allRoles.push(role);
+    }
+  })
+}
+
+let allMembers       = reactive([]);
+let allMembersCalled = false;
+if (!allMembersCalled) {
+  new GetAllMembers(selectedGuild).call().then((response) => {
+    for (let member of response) {
+      allMembers.push(member);
+    }
+  })
+}
+
 
 </script>
 
@@ -102,21 +155,88 @@ function lockButton() {
       <table id="anarchy-table">
         <thead>
           <tr>
-            <td style="width:100%;">
-              <a class="btn btn-sm" id="anarchy-button-green" style="float:left;" @click="lockButton();">
-                  <i class="fas" :class="poll.custom ? 'fa-lock': 'fa-unlock'" aria-hidden="true"></i>
-              </a>
-            </td>
+            <td style="width:100%;"></td>
+            <td></td>
             <td>
               <a class="btn btn-sm" id="anarchy-button-green" style="float:right;" @click="poll.options.push({'positive': false, 'value': ''})" v-if="poll.custom">
-                  <i class="fas fa-plus" aria-hidden="true"></i>
+                  <i class="fas fa-plus" aria-hidden="true"/>
               </a>
             </td>
           </tr>
         </thead>
-        <tr v-for="(option,index) in poll.options">
+        <tr v-for="(option,index) in poll.options" v-bind:key="index">
           <td>
             <input type="text" :disabled="!poll.custom" v-model="poll.options[index].value" id="anarchy-form" class="form-control" placeholder="Enter option..."/>
+          </td>
+          <td>
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" :data-bs-target="'#optionSettings' + index" id="anarchy-button-blue" style="float:right;">
+              <i class="fas fa-cog" aria-hidden="true"></i>
+            </button>
+            <div class="modal fade" :id="'optionSettings' + index" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="optionSettingsLabel" aria-hidden="true">
+              <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content" id="anarchy-modal-content">
+                  <div class="modal-body" id="anarchy-modal-body">
+                    <label id="anarchy-label">Change connected to option '{{poll.options[index].value}}'</label>
+                    <hr class="my-2" id="anarchy-form-row-seperator"/>
+                    <div class="row" id="anarchy-form-row" v-for="(change,change_index) in poll.options[index].changes" v-bind:key="change_index">
+                      <div class="col-sm-4">
+                        <select id="anarchy-form-select" v-model="change.identifier" class="form-select" required>
+                          <option disabled value>---Select a change---</option>
+                          <option v-for="available_change in availableChanges" :value="available_change.identifier.value" v-bind:key="available_change.identifier.value">
+                            {{available_change.identifier.name}}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-sm-4">
+                        <label v-if="change.identifier === ''"></label>
+                        <input id="anarchy-form" type="text" v-else-if="availableChangesMapping[change.identifier].key_kind === 'String'" class="form-control"/>
+                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Channel'" id="anarchy-form-select" v-model="change.key" class="form-select" required>
+                          <option disabled value>---Select a channel---</option>
+                          <option v-for="channel in allTextChannels" :value="channel['id']" v-bind:key="channel['id']">
+                            #{{channel['name']}}
+                          </option>
+                        </select>
+                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Role'" id="anarchy-form-select" v-model="change.key" class="form-select" required>
+                          <option disabled value>---Select a role---</option>
+                          <option v-for="role in allRoles" :value="role['id']" v-bind:key="role['id']">
+                            {{role['name']}}
+                          </option>
+                        </select>
+                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Member'" id="anarchy-form-select" v-model="change.key" class="form-select" required>
+                          <option disabled value>---Select a member---</option>
+                        </select>
+                      </div>
+                      <div class="col-sm-4">
+                        <label v-if="change.identifier === ''"></label>
+                        <input id="anarchy-form" type="text" v-else-if="availableChangesMapping[change.identifier].value_kind === 'String'" class="form-control"/>
+                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Channel'" id="anarchy-form-select" v-model="change.value" class="form-select" required>
+                          <option disabled value>---Select a channel---</option>
+                          <option v-for="channel in allTextChannels" :value="channel['id']" v-bind:key="channel['id']">
+                            #{{channel['name']}}
+                          </option>
+                        </select>
+                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Role'" id="anarchy-form-select" v-model="change.value" class="form-select" required>
+                          <option disabled value>---Select a role---</option>
+                          <option v-for="role in allRoles" :value="role['id']" v-bind:key="role['id']">
+                            {{role['name']}}
+                          </option>
+                        </select>
+                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Member'" id="anarchy-form-select" v-model="change.value" class="form-select" required>
+                          <option disabled value>---Select a member---</option>
+                          <option v-for="member in allMembers" :value="member['id']" v-bind:key="member['id']">
+                            {{member['username'] + '#' + member['discriminator']}}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer" id="anarchy-modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </td>
           <td>
             <button class="btn btn-outline-danger btn-sm" style="float:right;" :disabled="index < 2"  @click="poll.options.splice(index, 1)" v-if="poll.custom">
@@ -129,7 +249,7 @@ function lockButton() {
     <Row label="Channel">
       <select id="anarchy-form-select" v-model="poll.channel_id" class="form-select" required>
         <option disabled value>---Select a channel---</option>
-        <option v-for="channel in availableChannels" :value="channel['id']">
+        <option v-for="channel in availableChannels" :value="channel['id']" v-bind:key="channel['id']">
           #{{channel['name']}}
         </option>
       </select>
@@ -137,7 +257,7 @@ function lockButton() {
     <Row label="Result channel" explanation="What channel the results will be posted in">
       <select id="anarchy-form-select" v-model="poll.result_channel_id" class="form-select" required>
         <option disabled value>---Select a channel---</option>
-        <option v-for="channel in availableChannels" :value="channel['id']">
+        <option v-for="channel in availableChannels" :value="channel['id']" v-bind:key="channel['id']">
           #{{channel['name']}}
         </option>
       </select>
@@ -169,7 +289,7 @@ function lockButton() {
     </Row>
     <Row label="Max votes per user">
       <select id="anarchy-form-select" v-model="poll.max_votes_per_user" class="form-select" required>
-        <option v-for="amount in poll.options.length-1" :value="amount">
+        <option v-for="amount in poll.options.length-1" :value="amount" v-bind:key="amount">
           {{amount}}
         </option>
       </select>
@@ -180,7 +300,7 @@ function lockButton() {
     <Row label="Role required to vote">
       <select id="anarchy-form-select" v-model="poll.role_id_needed" class="form-select" required>
         <option disabled value>---Select a role---</option>
-        <option v-for="role in availableRoles" :value="role['id']">
+        <option v-for="role in availableRoles" :value="role['id']" v-bind:key="role['id']">
           {{role['name']}}
         </option>
       </select>

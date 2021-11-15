@@ -106,6 +106,15 @@ $border_size: 0;
 #anarchy-form-row-seperator {
   color: $gb_light0;
 }
+#anarchy-button-blue {
+  color: $gb_neutral_blue;
+  border-color: $gb_neutral_blue;
+}
+#anarchy-button-blue:hover {
+  color: $gb_light0;
+  border-color: $gb_neutral_blue;
+  background-color: $gb_neutral_blue;
+}
 #anarchy-button-green {
   color: $gb_faded_aqua;
   border-color: $gb_faded_aqua;
@@ -139,5 +148,15 @@ $border_size: 0;
   color: $gb_gray_244;
   display: block;
 }
+#anarchy-modal-content {
+  background-color: $gb_dark0;
+}
+#anarchy-modal-footer {
+  border-top: 0;
+}
+#anarchy-modal-body {
+  
+}
+
 
 </style>
