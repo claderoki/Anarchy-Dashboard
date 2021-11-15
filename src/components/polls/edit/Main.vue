@@ -158,7 +158,7 @@ if (!allMembersCalled) {
             <td style="width:100%;"></td>
             <td></td>
             <td>
-              <a class="btn btn-sm" id="anarchy-button-green" style="float:right;" @click="poll.options.push({'positive': false, 'value': ''})" v-if="poll.custom">
+              <a class="btn btn-sm" id="anarchy-button-green" style="float:right;" @click="poll.options.push({'positive': false, 'value': '', 'changes': ref([getEmptyChange()])})" v-if="poll.custom">
                   <i class="fas fa-plus" aria-hidden="true"/>
               </a>
             </td>
@@ -180,7 +180,7 @@ if (!allMembersCalled) {
                     <hr class="my-2" id="anarchy-form-row-seperator"/>
                     <div class="row" id="anarchy-form-row" v-for="(change,change_index) in poll.options[index].changes" v-bind:key="change_index">
                       <div class="col-sm-4">
-                        <select id="anarchy-form-select" v-model="change.identifier" class="form-select" required>
+                        <select id="anarchy-form-select" v-model="change.identifier" @change="change.key = ''; change.value = ''" class="form-select" required>
                           <option disabled value>---Select a change---</option>
                           <option v-for="available_change in availableChanges" :value="available_change.identifier.value" v-bind:key="available_change.identifier.value">
                             {{available_change.identifier.name}}
