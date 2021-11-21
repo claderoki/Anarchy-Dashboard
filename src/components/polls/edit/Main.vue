@@ -3,9 +3,9 @@ import { reactive, ref } from 'vue';
 import Row from '/@/components/Row.vue';
 import Block from '/@/components/Block.vue';
 import BlockFooter from '/@/components/BlockFooter.vue';
-import { GetGuilds } from '/@/discord/api/calls';
 import { SavePoll, GetMutualGuilds, GetAllRoles, GetAllMembers, GetAllTextChannels, GetPollChannels, GetPollAvailableChanges } from '/@/api/calls';
 import { SelectedGuildCache } from '/@/helpers/cache';
+import { ColourPicker } from 'vue-colour-picker';
 
 const poll = reactive({
   id:                             0,
@@ -30,9 +30,23 @@ function getEmptyChange() {
     };
 }
 
+function createOption(value, positive) {
+  return reactive({
+    "value": value,
+    "color": "#000000",
+    "changes": ref([getEmptyChange()])
+  });
+}
+
 function addDefaultOptions() {
-  poll.options.push(reactive({"positive": true, "value": "Yes", "changes": ref([getEmptyChange()])}));
-  poll.options.push(reactive({"positive": false, "value": "No", "changes": ref([getEmptyChange()])}));
+  let yesOption = createOption("Yes");
+  let noOption = createOption("No");
+
+  yesOption.color = '#5ab070';
+  noOption.color  = '#dd8282';
+  
+  poll.options.push(yesOption);
+  poll.options.push(noOption);
 }
 
 class PollHelper {
@@ -77,22 +91,6 @@ function save() {
   }
 }
 
-addDefaultOptions();
-let selectedGuild = SelectedGuildCache.get();
-
-let availableChannels = reactive([]);
-let availableRoles    = reactive([]);
-
-let pollChannelsCalled = false;
-if (!pollChannelsCalled) {
-  new GetPollChannels(selectedGuild).call().then((response) => {
-    for (let channel of response) {
-      availableChannels.push(channel);
-    }
-    pollChannelsCalled = true;
-  })
-}
-
 function lockButton() {
   poll.custom = !poll.custom;
   if (!poll.custom) {
@@ -101,48 +99,50 @@ function lockButton() {
   }
 }
 
+addDefaultOptions();
+
+let selectedGuild           = SelectedGuildCache.get();
 let availableChangesMapping = {};
-let availableChanges       = reactive([]);
-let availableChangesCalled = false;
-if (!availableChangesCalled) {
+let availableChanges        = reactive([]);
+let availableChannels       = reactive([]);
+let allMembers              = reactive([]);
+let allRoles                = reactive([]);
+let allTextChannels         = reactive([]);
+
+function hydrateData() {
+  new GetPollChannels(selectedGuild).call().then((response) => {
+    for (let channel of response) {
+      availableChannels.push(channel);
+    }
+  });
+
   new GetPollAvailableChanges().call().then((response) => {
     for (let change of response) {
       availableChanges.push(change);
       availableChangesMapping[change.identifier.value] = change;
     }
-  })
-}
+  });
 
-let allTextChannels       = reactive([]);
-let allTextChannelsCalled = false;
-if (!allTextChannelsCalled) {
   new GetAllTextChannels(selectedGuild).call().then((response) => {
     for (let channel of response) {
       allTextChannels.push(channel);
     }
-  })
-}
+  });
 
-let allRoles       = reactive([]);
-let allRolesCalled = false;
-if (!allRolesCalled) {
   new GetAllRoles(selectedGuild).call().then((response) => {
     for (let role of response) {
       allRoles.push(role);
     }
-  })
-}
+  });
 
-let allMembers       = reactive([]);
-let allMembersCalled = false;
-if (!allMembersCalled) {
   new GetAllMembers(selectedGuild).call().then((response) => {
     for (let member of response) {
       allMembers.push(member);
     }
-  })
+  });
 }
 
+hydrateData();
 
 </script>
 
@@ -166,7 +166,9 @@ if (!allMembersCalled) {
         </thead>
         <tr v-for="(option,index) in poll.options" v-bind:key="index">
           <td>
-            <input type="text" :disabled="!poll.custom" v-model="poll.options[index].value" id="anarchy-form" class="form-control" placeholder="Enter option..."/>
+            <div :style="'border-left: 2px solid ' + poll.options[index].color">
+              <input type="text" :disabled="!poll.custom" v-model="poll.options[index].value" id="anarchy-form" class="form-control" placeholder="Enter option..."/>
+            </div>
           </td>
           <td>
             <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" :data-bs-target="'#optionSettings' + index" id="anarchy-button-blue" style="float:right;">
@@ -176,11 +178,16 @@ if (!allMembersCalled) {
               <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content" id="anarchy-modal-content">
                   <div class="modal-body" id="anarchy-modal-body">
-                    <label id="anarchy-label">Change connected to option '{{poll.options[index].value}}'</label>
+                    <label id="anarchy-label">Settings for option '{{poll.options[index].value}}'</label>
+                    <Row label="Color">
+                      <input type="color" id="anarchy-color-picker" class="form-control form-control-sm form-control-color" v-model="poll.options[index].color">
+                    </Row>
                     <hr class="my-2" id="anarchy-form-row-seperator"/>
+                    <label id="anarchy-label">Change(s)</label>
                     <div class="row" id="anarchy-form-row" v-for="(change,change_index) in poll.options[index].changes" v-bind:key="change_index">
                       <div class="col-sm-4">
                         <select id="anarchy-form-select" v-model="change.identifier" @change="change.key = ''; change.value = ''" class="form-select" required>
+                        <input type="text" placeholder="Search.." id="myInput" onkeyup="">
                           <option disabled value>---Select a change---</option>
                           <option v-for="available_change in availableChanges" :value="available_change.identifier.value" v-bind:key="available_change.identifier.value">
                             {{available_change.identifier.name}}
@@ -232,7 +239,7 @@ if (!allMembersCalled) {
                   </div>
                   <div class="modal-footer" id="anarchy-modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save</button>
                   </div>
                 </div>
               </div>
@@ -300,7 +307,7 @@ if (!allMembersCalled) {
     <Row label="Role required to vote">
       <select id="anarchy-form-select" v-model="poll.role_id_needed" class="form-select" required>
         <option disabled value>---Select a role---</option>
-        <option v-for="role in availableRoles" :value="role['id']" v-bind:key="role['id']">
+        <option v-for="role in allRoles" :value="role['id']" v-bind:key="role['id']">
           {{role['name']}}
         </option>
       </select>

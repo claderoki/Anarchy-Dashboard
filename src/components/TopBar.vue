@@ -5,14 +5,14 @@ import { GetMutualGuilds } from '/@/api/calls';
 import { GetMe } from '/@/discord/api/calls';
 import { SelectedGuildCache } from '/@/helpers/cache';
 
-let mutualGuildsCalled = false;
 let mutualGuilds = reactive([]);
 
 let data = reactive({
-  selectedGuild: SelectedGuildCache.get()
+  selectedGuild:      SelectedGuildCache.get(),
+  mutualGuildsCalled: false
 });
 
-if (!mutualGuildsCalled) {
+if (!data.mutualGuildsCalled) {
   new GetMutualGuilds().call().then((response) => {
     let containsSelected = false;
     for (let guild of response) {
@@ -24,7 +24,7 @@ if (!mutualGuildsCalled) {
     if (!containsSelected) {
       SelectedGuildCache.remove();
     }
-    mutualGuildsCalled = true;
+    data.mutualGuildsCalled = true;
   });
 }
 
@@ -104,7 +104,7 @@ if (me === null) {
       </div>
     </div>
   </nav>
-  <div>
+  <div v-if="data.mutualGuildsCalled">
     <div class="container">
       <main>
         <div class="row">

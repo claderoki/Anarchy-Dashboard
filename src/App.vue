@@ -157,6 +157,9 @@ $border_size: 0;
 #anarchy-modal-body {
   
 }
-
+#anarchy-color-picker {
+  background-color: $gb_dark0_hard;
+  border: 0;
+}
 
 </style>
