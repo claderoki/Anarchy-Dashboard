@@ -73,14 +73,14 @@ export class GetMutualGuilds extends AnarchyCall {
     }
 }
 
-export class GetPollChannels extends AnarchyCall {
+export class GetPollSettings extends AnarchyCall {
     constructor(guild_id) {
         super();
         this.guild_id = guild_id;
     }
 
     getEndpoint() {
-        return '/polls/' +this.guild_id + '/allowed_channels';
+        return '/polls/' +this.guild_id + '/get_settings';
     }
 
 }

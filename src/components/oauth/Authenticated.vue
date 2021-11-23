@@ -19,7 +19,7 @@ new GetMe().call().then((response) => {
 </script>
 
 <template>
-    <h1 id="anarchy-label">You are now authenticated.</h1>
-    <h1 v-if="me.username" id="anarchy-label">Welcome {{me.username}}#{{me.discriminator}}.</h1>
+    <h1>You are now authenticated.</h1>
+    <h1 v-if="me.username">Welcome {{me.username}}#{{me.discriminator}}.</h1>
 
 </template>

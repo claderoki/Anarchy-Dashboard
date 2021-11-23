@@ -1,0 +1,40 @@
+@import "/@/scss/gruvbox_colors.scss";
+
+$white:    $gb_light0_hard;
+$gray-100: $gb_light0_soft;
+$gray-200: $gb_light1;
+$gray-300: $gb_light2;
+$gray-400: $gb_light3;
+$gray-500: $gb_light4;
+$gray-600: $gb_light4_256;
+$gray-700: $gb_light0_hard;
+$gray-800: $gb_dark4;
+$gray-900: $gb_dark0_soft;
+$black:    $gb_dark0_hard;
+
+$blue:    $gb_neutral_blue;
+$indigo:  #6610f2;
+$purple:  $gb_bright_purple;
+$pink:    #d63384;
+$red:     $gb_neutral_red;
+$orange:  $gb_neutral_orange;
+$yellow:  $gb_neutral_yellow;
+$green:   $gb_faded_aqua;
+$teal:    #20c997;
+
+$form-switch-color: $gb_light1;
+
+$modal-content-color: $white;
+$modal-content-bg:    $gray-900;
+
+$input-border-width: 0;
+$input-bg: $black;
+$input-color: $white;
+$input-disabled-bg: $gray-800;
+
+.bg-darker {
+  background-color: $black !important;
+}
+
+
+@import "../node_modules/bootstrap/scss/bootstrap";

@@ -6,10 +6,10 @@ defineProps({
 </script>
 
 <template>
-  <hr class="my-2" id="anarchy-form-row-seperator"/>
+  <hr class="my-2"/>
   <div class="row" id="anarchy-form-row">
     <div class="col-sm-3">
-      <label id="anarchy-label">
+      <label>
         {{ label }}
       </label>
     </div>

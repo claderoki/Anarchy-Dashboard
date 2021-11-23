@@ -4,6 +4,7 @@ import { ref, reactive } from 'vue';
 import { GetMutualGuilds } from '/@/api/calls';
 import { GetMe } from '/@/discord/api/calls';
 import { SelectedGuildCache } from '/@/helpers/cache';
+import Loader from '/@/components/Loader.vue';
 
 let mutualGuilds = reactive([]);
 
@@ -17,7 +18,7 @@ if (!data.mutualGuildsCalled) {
     let containsSelected = false;
     for (let guild of response) {
       mutualGuilds.push(guild);
-      if (guild.id === SelectedGuildCache.get()) {
+      if (guild.id == SelectedGuildCache.get()) {
         containsSelected = true;
       }
     }
@@ -35,7 +36,6 @@ function onGuildSelect() {
 if (data.selectedGuild === null) {
   data.selectedGuild = '';
 }
-
 
 class UserDetailsCache {
   static getCached() {
@@ -79,21 +79,22 @@ if (me === null) {
 </script>
 
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark" id="anarchy-topbar">
-    <a class="navbar-brand" id="anarchy-label">Anarchy</a>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="anarchy-topbar">
+    <a class="navbar-brand">Anarchy</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#anarchy-topbar-links" aria-controls="anarchy-topbar-links" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="anarchy-topbar-links">
       <div class="navbar-nav">
         <router-link class="nav-item nav-link" to="/home">Home</router-link>
-        <router-link v-if="SelectedGuildCache.get() !== null" class="nav-item nav-link" to="/poll/create">Create a poll</router-link>
+        <router-link v-if="data.selectedGuild !== ''" class="nav-item nav-link" to="/poll/create">Create a poll</router-link>
+        <router-link v-if="data.selectedGuild !== ''" class="nav-item nav-link" to="/poll/settings">Poll settings</router-link>
       </div>
     </div>
     <div>
-      <select id="anarchy-form-select-lighter" v-model="data.selectedGuild" @change="onGuildSelect();" class="form-select" required>
+      <select v-model="data.selectedGuild" @change="onGuildSelect();" class="form-select" required>
         <option disabled value>---Select a guild---</option>
-        <option v-for="guild in mutualGuilds" :value="guild['id']" v-bind:key="guild['id']">{{ guild['name'] }}</option>
+        <option v-for="guild in mutualGuilds" :value="guild['id'].toString()" v-bind:key="guild['id'].toString()">{{ guild['name'] }}</option>
       </select>
     </div>
     <div id="anarchy-topbar-avatar">
@@ -104,6 +105,9 @@ if (me === null) {
       </div>
     </div>
   </nav>
+  <div v-if="!data.mutualGuildsCalled">
+    <Loader/>
+  </div>
   <div v-if="data.mutualGuildsCalled">
     <div class="container">
       <main>

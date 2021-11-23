@@ -16,11 +16,7 @@ function open_url() {
 </script>
 
 <template>
-  <div class="container py-4">
-    <div class="h-100 p-5 text-white bg-dark rounded-3">
-      <h2>Dashboard for the Anarchy Discord bot</h2>
-      <p>Text</p>
-      <button class="btn btn-primary" @click="open_url();" type="button">Authenticate now</button>
-    </div>
-  </div>
+  <anarchy-block title="Dashboard for the Anarchy Discord bot">
+    <button class="btn btn-outline-primary" @click="open_url();" type="button">Authenticate now</button>
+  </anarchy-block>
 </template>

@@ -3,7 +3,7 @@ defineProps({})
 </script>
 
 <template>
-  <hr class="my-2" id="anarchy-form-row-seperator"/>
+  <hr class="my-2"/>
   <div class="row" id="anarchy-form-block-footer">
     <div>
       <slot></slot>

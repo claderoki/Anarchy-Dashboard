@@ -1,14 +1,9 @@
 <script setup>
 import { reactive, ref } from 'vue';
-import Row from '/@/components/Row.vue';
-import Block from '/@/components/Block.vue';
-import BlockFooter from '/@/components/BlockFooter.vue';
-import { SavePoll, GetMutualGuilds, GetAllRoles, GetAllMembers, GetAllTextChannels, GetPollChannels, GetPollAvailableChanges } from '/@/api/calls';
+import { SavePoll, GetAllRoles, GetPollSettings, GetAllMembers, GetAllTextChannels, GetPollAvailableChanges } from '/@/api/calls';
 import { SelectedGuildCache } from '/@/helpers/cache';
-import { ColourPicker } from 'vue-colour-picker';
 
 const poll = reactive({
-  id:                             0,
   question:                       '',
   channel_id:                     '',
   result_channel_id:              '',
@@ -101,6 +96,7 @@ function lockButton() {
 
 addDefaultOptions();
 
+let settings                = reactive({allowedChannels: [], allowedChanges: []});
 let selectedGuild           = SelectedGuildCache.get();
 let availableChangesMapping = {};
 let availableChanges        = reactive([]);
@@ -110,16 +106,19 @@ let allRoles                = reactive([]);
 let allTextChannels         = reactive([]);
 
 function hydrateData() {
-  new GetPollChannels(selectedGuild).call().then((response) => {
-    for (let channel of response) {
-      availableChannels.push(channel);
-    }
-  });
-
   new GetPollAvailableChanges().call().then((response) => {
     for (let change of response) {
       availableChanges.push(change);
       availableChangesMapping[change.identifier.value] = change;
+    }
+  });
+
+  new GetPollSettings(selectedGuild).call().then((response) => {
+    for (let channel of response.allowed_channels) {
+        settings.allowedChannels.push(channel);
+    }
+    for (let change of response.allowed_changes) {
+        settings.allowedChanges.push(change);
     }
   });
 
@@ -131,7 +130,9 @@ function hydrateData() {
 
   new GetAllRoles(selectedGuild).call().then((response) => {
     for (let role of response) {
-      allRoles.push(role);
+      if (role.name !== "@everyone") {
+        allRoles.push(role);
+      }
     }
   });
 
@@ -147,18 +148,18 @@ hydrateData();
 </script>
 
 <template>
-  <Block title="Basic settings" subtitle="Basic poll settings">
-    <Row label="Question">
-      <input id="anarchy-form" type="text" v-model="poll.question" class="form-control" placeholder="Enter question..." required/>
-    </Row>
-    <Row label="Options">
+  <anarchy-block title="Basic settings" subtitle="Basic poll settings">
+    <anarchy-row label="Question">
+      <input type="text" v-model="poll.question" class="form-control" placeholder="Enter question..." required/>
+    </anarchy-row>
+    <anarchy-row label="Options">
       <table id="anarchy-table">
         <thead>
           <tr>
             <td style="width:100%;"></td>
             <td></td>
             <td>
-              <a class="btn btn-sm" id="anarchy-button-green" style="float:right;" @click="poll.options.push({'positive': false, 'value': '', 'changes': ref([getEmptyChange()])})" v-if="poll.custom">
+              <a class="btn btn-outline-success btn-sm" style="float:right;" @click="poll.options.push({'positive': false, 'value': '', 'changes': ref([getEmptyChange()])})" v-if="poll.custom">
                   <i class="fas fa-plus" aria-hidden="true"/>
               </a>
             </td>
@@ -167,68 +168,69 @@ hydrateData();
         <tr v-for="(option,index) in poll.options" v-bind:key="index">
           <td>
             <div :style="'border-left: 2px solid ' + poll.options[index].color">
-              <input type="text" :disabled="!poll.custom" v-model="poll.options[index].value" id="anarchy-form" class="form-control" placeholder="Enter option..."/>
+              <input type="text" :disabled="!poll.custom" v-model="poll.options[index].value" class="form-control" placeholder="Enter option..."/>
             </div>
           </td>
           <td>
-            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" :data-bs-target="'#optionSettings' + index" id="anarchy-button-blue" style="float:right;">
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" :data-bs-target="'#optionSettings' + index" style="float:right;">
               <i class="fas fa-cog" aria-hidden="true"></i>
             </button>
-            <div class="modal fade" :id="'optionSettings' + index" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="optionSettingsLabel" aria-hidden="true">
+            <div class="modal fade" :id="'optionSettings' + index" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
               <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content" id="anarchy-modal-content">
-                  <div class="modal-body" id="anarchy-modal-body">
-                    <label id="anarchy-label">Settings for option '{{poll.options[index].value}}'</label>
-                    <Row label="Color">
-                      <input type="color" id="anarchy-color-picker" class="form-control form-control-sm form-control-color" v-model="poll.options[index].color">
-                    </Row>
-                    <hr class="my-2" id="anarchy-form-row-seperator"/>
-                    <label id="anarchy-label">Change(s)</label>
+                <div class="modal-content">
+                  <div class="modal-body"   id="anarchy-modal-body">
+                    <label>Settings for option '{{poll.options[index].value}}'</label>
+                    <anarchy-row label="Color">
+                      <input type="color" class="form-control form-control-sm form-control-color" v-model="poll.options[index].color">
+                    </anarchy-row>
+                    <hr class="my-2"/>
+                    <label>Change(s)</label>
                     <div class="row" id="anarchy-form-row" v-for="(change,change_index) in poll.options[index].changes" v-bind:key="change_index">
                       <div class="col-sm-4">
-                        <select id="anarchy-form-select" v-model="change.identifier" @change="change.key = ''; change.value = ''" class="form-select" required>
-                        <input type="text" placeholder="Search.." id="myInput" onkeyup="">
+                        <select v-model="change.identifier" @change="change.key = ''; change.value = ''" class="form-select" required>
                           <option disabled value>---Select a change---</option>
-                          <option v-for="available_change in availableChanges" :value="available_change.identifier.value" v-bind:key="available_change.identifier.value">
-                            {{available_change.identifier.name}}
-                          </option>
+                          <template v-for="available_change in availableChanges" v-bind:key="available_change.identifier.value">
+                            <option :value="available_change.identifier.value" v-if="settings.allowedChanges.includes(available_change.identifier.value)">
+                              {{available_change.identifier.name}}
+                            </option>
+                          </template>
                         </select>
                       </div>
                       <div class="col-sm-4">
                         <label v-if="change.identifier === ''"></label>
-                        <input id="anarchy-form" type="text" v-else-if="availableChangesMapping[change.identifier].key_kind === 'String'" class="form-control"/>
-                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Channel'" id="anarchy-form-select" v-model="change.key" class="form-select" required>
+                        <input type="text" v-else-if="availableChangesMapping[change.identifier].key_kind === 'String'" class="form-control"/>
+                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Channel'" v-model="change.key" class="form-select" required>
                           <option disabled value>---Select a channel---</option>
                           <option v-for="channel in allTextChannels" :value="channel['id']" v-bind:key="channel['id']">
                             #{{channel['name']}}
                           </option>
                         </select>
-                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Role'" id="anarchy-form-select" v-model="change.key" class="form-select" required>
+                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Role'" v-model="change.key" class="form-select" required>
                           <option disabled value>---Select a role---</option>
                           <option v-for="role in allRoles" :value="role['id']" v-bind:key="role['id']">
                             {{role['name']}}
                           </option>
                         </select>
-                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Member'" id="anarchy-form-select" v-model="change.key" class="form-select" required>
+                        <select v-else-if="availableChangesMapping[change.identifier].key_kind === 'Member'" v-model="change.key" class="form-select" required>
                           <option disabled value>---Select a member---</option>
                         </select>
                       </div>
                       <div class="col-sm-4">
                         <label v-if="change.identifier === ''"></label>
-                        <input id="anarchy-form" type="text" v-else-if="availableChangesMapping[change.identifier].value_kind === 'String'" class="form-control"/>
-                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Channel'" id="anarchy-form-select" v-model="change.value" class="form-select" required>
+                        <input type="text" v-else-if="availableChangesMapping[change.identifier].value_kind === 'String'" class="form-control"  />
+                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Channel'" v-model="change.value" class="form-select" required>
                           <option disabled value>---Select a channel---</option>
                           <option v-for="channel in allTextChannels" :value="channel['id']" v-bind:key="channel['id']">
                             #{{channel['name']}}
                           </option>
                         </select>
-                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Role'" id="anarchy-form-select" v-model="change.value" class="form-select" required>
+                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Role'" v-model="change.value" class="form-select" required>
                           <option disabled value>---Select a role---</option>
                           <option v-for="role in allRoles" :value="role['id']" v-bind:key="role['id']">
                             {{role['name']}}
                           </option>
                         </select>
-                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Member'" id="anarchy-form-select" v-model="change.value" class="form-select" required>
+                        <select v-else-if="availableChangesMapping[change.identifier].value_kind === 'Member'" v-model="change.value" class="form-select" required>
                           <option disabled value>---Select a member---</option>
                           <option v-for="member in allMembers" :value="member['id']" v-bind:key="member['id']">
                             {{member['username'] + '#' + member['discriminator']}}
@@ -238,8 +240,9 @@ hydrateData();
                     </div>
                   </div>
                   <div class="modal-footer" id="anarchy-modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save</button>
+                    <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal">
+                      <i class="fas fa-check" aria-hidden="true"></i>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -252,74 +255,67 @@ hydrateData();
           </td>
         </tr>
       </table>
-    </Row>
-    <Row label="Channel">
-      <select id="anarchy-form-select" v-model="poll.channel_id" class="form-select" required>
+    </anarchy-row>
+    <anarchy-row label="Channel">
+      <select v-model="poll.channel_id" class="form-select" required>
         <option disabled value>---Select a channel---</option>
         <option v-for="channel in availableChannels" :value="channel['id']" v-bind:key="channel['id']">
           #{{channel['name']}}
         </option>
       </select>
-    </Row>
-    <Row label="Result channel" explanation="What channel the results will be posted in">
-      <select id="anarchy-form-select" v-model="poll.result_channel_id" class="form-select" required>
+    </anarchy-row>
+    <anarchy-row label="Result channel" explanation="What channel the results will be posted in">
+      <select v-model="poll.result_channel_id" class="form-select"   required>
         <option disabled value>---Select a channel---</option>
         <option v-for="channel in availableChannels" :value="channel['id']" v-bind:key="channel['id']">
           #{{channel['name']}}
         </option>
       </select>
-    </Row>
-    <BlockFooter>
-      <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="save();">
-        Save
+    </anarchy-row>
+    <anarchy-block-footer>
+      <button class="btn btn-outline-success btn-sm" style="float:right;" @click="save();">
+        <i class="fas fa-save" aria-hidden="true"/>
       </button>
-    </BlockFooter>
-  </Block>
-  <Block title="Additional settings" subtitle="Extra settings to help personalize your poll.">
-    <Row label="Pin?">
-      <label class="switch">
-        <input type="checkbox" v-model="poll.pin"/>
-        <span class="slider"></span>
-      </label>
-    </Row>
-    <Row label="Delete after?">
-      <label class="switch">
-        <input type="checkbox" v-model="poll.delete_after_results"/>
-        <span class="slider"></span>
-      </label>
-    </Row>
-    <Row label="Mention role?">
-      <label class="switch">
-        <input type="checkbox" v-model="poll.mention_role"/>
-        <span class="slider"></span>
-      </label>
-    </Row>
-    <Row label="Max votes per user">
-      <select id="anarchy-form-select" v-model="poll.max_votes_per_user" class="form-select" required>
+    </anarchy-block-footer>
+  </anarchy-block>
+  <anarchy-block title="Additional settings" subtitle="Extra settings to help personalize your poll.">
+    <anarchy-row label="Pin?">
+      <div class="form-check form-switch">
+        <input class="form-check-input" v-model="poll.pin" type="checkbox">
+      </div>
+    </anarchy-row>
+    <anarchy-row label="Delete after?">
+      <div class="form-check form-switch">
+        <input class="form-check-input" v-model="poll.delete_after_results" type="checkbox">
+      </div>
+    </anarchy-row>
+    <anarchy-row label="Mention role?">
+      <div class="form-check form-switch">
+        <input class="form-check-input" v-model="poll.mention_role" type="checkbox">
+      </div>
+    </anarchy-row>
+    <anarchy-row label="Max votes per user">
+      <select v-model="poll.max_votes_per_user" class="form-select" required>
         <option v-for="amount in poll.options.length-1" :value="amount" v-bind:key="amount">
           {{amount}}
         </option>
       </select>
-    </Row>
-    <Row label="Percentage needed to pass">
-      <input id="anarchy-form" type="text" :disabled="poll.custom" v-model="poll.vote_percentage_needed_to_pass" class="form-control" required/>
-    </Row>
-    <Row label="Role required to vote">
-      <select id="anarchy-form-select" v-model="poll.role_id_needed" class="form-select" required>
+    </anarchy-row>
+    <anarchy-row label="Percentage needed to pass">
+      <input type="text" :disabled="poll.custom" v-model="poll.vote_percentage_needed_to_pass" class="form-control" required/>
+    </anarchy-row>
+    <anarchy-row label="Role required to vote">
+      <select v-model="poll.role_id_needed" class="form-select" required>
         <option disabled value>---Select a role---</option>
         <option v-for="role in allRoles" :value="role['id']" v-bind:key="role['id']">
           {{role['name']}}
         </option>
       </select>
-    </Row>
-    <BlockFooter>
-      <button class="btn btn-sm" style="float:right;" id="anarchy-button-green" @click="save();">
-        Save
+    </anarchy-row>
+    <anarchy-block-footer>
+      <button class="btn btn-outline-success btn-sm" style="float:right;" @click="save();">
+        <i class="fas fa-save" aria-hidden="true"/>
       </button>
-    </BlockFooter>
-  </Block>
+    </anarchy-block-footer>
+  </anarchy-block>
 </template>
-
-<style lang="scss">
-  @import "/@/scss/slider.scss";
-</style>

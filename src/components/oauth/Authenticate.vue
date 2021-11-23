@@ -31,11 +31,11 @@ if (code !== null) {
 </script>
 
 <template>
-    <h1 v-if="!error.message" id="anarchy-label">Authenticating...</h1>
+    <h1 v-if="!error.message">Authenticating...</h1>
     <div v-if="error.message">
-        <h1 id="anarchy-label">Failed to authenticate...</h1>
-        <h2 id="anarchy-label">Error: {{error.message}}</h2>
-        <h3 id="anarchy-label">Description: {{error.description}}</h3>
+        <h1>Failed to authenticate...</h1>
+        <h2>Error: {{error.message}}</h2>
+        <h3>Description: {{error.description}}</h3>
     </div>
 
 </template>
