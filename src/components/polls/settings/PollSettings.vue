@@ -108,6 +108,10 @@ function onSettingCheck(checked, array, value) {
   }
 }
 
+function save() {
+  
+}
+
 </script>
 
 <template>
@@ -150,5 +154,10 @@ function onSettingCheck(checked, array, value) {
         </div>
       </div>
     </anarchy-row>
+    <anarchy-block-footer>
+      <button class="btn btn-outline-success btn-sm" style="float:right;" @click="save();">
+        <i class="fas fa-save" aria-hidden="true"/>
+      </button>
+    </anarchy-block-footer>
   </anarchy-block>
 </template>

@@ -100,7 +100,6 @@ let settings                = reactive({allowedChannels: [], allowedChanges: []}
 let selectedGuild           = SelectedGuildCache.get();
 let availableChangesMapping = {};
 let availableChanges        = reactive([]);
-let availableChannels       = reactive([]);
 let allMembers              = reactive([]);
 let allRoles                = reactive([]);
 let allTextChannels         = reactive([]);
@@ -259,17 +258,21 @@ hydrateData();
     <anarchy-row label="Channel">
       <select v-model="poll.channel_id" class="form-select" required>
         <option disabled value>---Select a channel---</option>
-        <option v-for="channel in availableChannels" :value="channel['id']" v-bind:key="channel['id']">
-          #{{channel['name']}}
-        </option>
+        <template v-for="channel in allTextChannels" v-bind:key="channel['id']">
+          <option :value="channel['id']" v-if="settings.allowedChannels.includes(channel['id'])">
+            #{{channel['name']}}
+          </option>
+        </template>
       </select>
     </anarchy-row>
     <anarchy-row label="Result channel" explanation="What channel the results will be posted in">
       <select v-model="poll.result_channel_id" class="form-select"   required>
         <option disabled value>---Select a channel---</option>
-        <option v-for="channel in availableChannels" :value="channel['id']" v-bind:key="channel['id']">
-          #{{channel['name']}}
-        </option>
+        <template v-for="channel in allTextChannels" v-bind:key="channel['id']">
+          <option :value="channel['id']" v-if="settings.allowedChannels.includes(channel['id'])">
+            #{{channel['name']}}
+          </option>
+        </template>
       </select>
     </anarchy-row>
     <anarchy-block-footer>
