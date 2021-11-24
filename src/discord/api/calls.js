@@ -1,13 +1,10 @@
 import { AbstractCall } from '/@/helpers/base_api';
+import { DiscordOauthTokenCache } from '/@/helpers/cache';
 
 class DiscordCall extends AbstractCall {
-    getAccessToken() {
-        // let expires_at = localStorage.getItem('expires_at');
-        // let refresh_token = localStorage.getItem('refresh_token');
-        // TODO: check expires at and refresh token if needed.
-
-        let access_token = localStorage.getItem('access_token');
-        return access_token;
+    constructor() {
+        super();
+        this.oauthToken = DiscordOauthTokenCache.get();
     }
 
     getBaseUri() {
@@ -16,7 +13,7 @@ class DiscordCall extends AbstractCall {
 
     getHeaders() {
         let headers = new Headers();
-        headers.append('Authorization', 'Bearer ' + this.getAccessToken());
+        headers.append('Authorization', 'Bearer ' + this.oauthToken.accessToken);
         return headers;
     }
 }

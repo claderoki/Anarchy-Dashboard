@@ -1,22 +1,20 @@
 import { AbstractCall } from '/@/helpers/base_api';
+import { DiscordOauthTokenCache } from '/@/helpers/cache';
+
 
 class AnarchyCall extends AbstractCall {
+    constructor() {
+        super();
+        this.oauthToken = DiscordOauthTokenCache.get();
+    }
+
     getBaseUri() {
         return 'http://127.0.0.1:8080/api';
     }
 
     getHeaders() {
-        return new Headers();
-    }
-
-    getAccessToken() {
-        let access_token = localStorage.getItem('access_token');
-        return access_token;
-    }
-
-    getHeaders() {
         let headers = new Headers();
-        headers.append('Authorization', 'Bearer ' + this.getAccessToken());
+        headers.append('Authorization', 'Bearer ' + this.oauthToken.accessToken);
         return headers;
     }
 }
@@ -56,6 +54,18 @@ export class Authenticate extends AnarchyCall {
         return '/oauth/authenticate/' + this.code;
     }
 }
+
+export class Reauthenticate extends AnarchyCall {
+    constructor(refreshToken) {
+        super();
+        this.refreshToken = refreshToken;
+    }
+
+    getEndpoint() {
+        return '/oauth/reauthenticate/' + this.refreshToken;
+    }
+}
+
 
 export class GetOauthUrl extends AnarchyCall {
     getEndpoint() {

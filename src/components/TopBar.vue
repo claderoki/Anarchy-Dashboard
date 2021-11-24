@@ -5,6 +5,8 @@ import { GetMutualGuilds } from '/@/api/calls';
 import { GetMe } from '/@/discord/api/calls';
 import { SelectedGuildCache } from '/@/helpers/cache';
 import Loader from '/@/components/Loader.vue';
+import { DiscordOauthTokenCache, OauthToken } from '/@/helpers/cache';
+import { Reauthenticate } from '/@/api/calls';
 
 let mutualGuilds = reactive([]);
 
@@ -13,8 +15,7 @@ let data = reactive({
   mutualGuildsCalled: false
 });
 
-if (!data.mutualGuildsCalled) {
-  new GetMutualGuilds().call().then((response) => {
+function handleMutualGuildsResponse(response) {
     let containsSelected = false;
     for (let guild of response) {
       mutualGuilds.push(guild);
@@ -26,7 +27,19 @@ if (!data.mutualGuildsCalled) {
       SelectedGuildCache.remove();
     }
     data.mutualGuildsCalled = true;
-  });
+}
+
+if (!data.mutualGuildsCalled) {
+  let call = new GetMutualGuilds();
+
+  if (call.oauthToken.expiresAt < new Date()) {
+    new Reauthenticate(call.oauthToken.refreshToken).call().then((response) => {
+      DiscordOauthTokenCache.set(OauthToken.fromResponse(response));
+      call.call().then(handleMutualGuildsResponse);
+    })
+  } else {
+    call.call().then(handleMutualGuildsResponse);
+  }
 }
 
 function onGuildSelect() {

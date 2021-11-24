@@ -1,13 +1,10 @@
 <script setup>
 import { reactive } from '@vue/reactivity';
-import {Authenticate} from '/@/api/calls';
+import { Authenticate } from '/@/api/calls';
+import { OauthToken, DiscordOauthTokenCache } from '/@/helpers/cache';
 
 function store_oauth(oauth_data) {
-    let currentDate = new Date();
-    currentDate.setSeconds(currentDate.getSeconds() + oauth_data.expires_in)
-    localStorage.setItem('access_token', oauth_data.access_token);
-    localStorage.setItem('refresh_token', oauth_data.refresh_token);
-    localStorage.setItem('expires_at', currentDate.toISOString());
+    DiscordOauthTokenCache.set(OauthToken.fromResponse(oauth_data));
 }
 
 let error = reactive({
