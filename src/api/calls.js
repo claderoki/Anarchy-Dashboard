@@ -66,7 +66,6 @@ export class Reauthenticate extends AnarchyCall {
     }
 }
 
-
 export class GetOauthUrl extends AnarchyCall {
     getEndpoint() {
         return '/oauth/url';
